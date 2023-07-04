@@ -1,6 +1,6 @@
-const { crawlPage } = require("./crawl.js");
+const { crawlPage, normalizeURL } = require("./crawl.js");
 
-function main() {
+async function main() {
     if (process.argv.length < 3) {
         console.log("no website provided");
         process.exit(1);
@@ -10,10 +10,24 @@ function main() {
         process.exit(1);
     }
 
-    const baseURL = process.argv[2];
+    const inputURL = process.argv[2];
+    let baseURL;
+
+    try {
+        const urlObj = new URL(inputURL);
+        baseURL = urlObj.href;
+        if (baseURL.length > 0 && baseURL.slice(-1) === "/") {
+            baseURL = baseURL.slice(0, -1);
+        }
+    } catch (err) {
+        console.log(`base url ${inputURL} was deemed invalid with error ${err.message}`);
+    }
 
     console.log(`starting crawl of ${baseURL}`);
-    crawlPage(baseURL);
+    const pages = await crawlPage(baseURL, baseURL, {});
+    for (const page of Object.entries(pages)) {
+        console.log(page);
+    }
 }
 
 main();
